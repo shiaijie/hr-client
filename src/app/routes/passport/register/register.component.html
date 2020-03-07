@@ -1,0 +1,101 @@
+<h3>注册</h3>
+<form nz-form [formGroup]="form" (ngSubmit)="submit()" role="form">
+  <nz-alert *ngIf="error" [nzType]="'error'" [nzMessage]="error" [nzShowIcon]="true" class="mb-lg"></nz-alert>
+  <!--工号-->
+  <nz-form-item>
+    <nz-form-label [nzSpan]="7" nzRequired>工号</nz-form-label>
+    <nz-form-control [nzErrorTip]="jobCodeErrorTip">
+      <nz-input-group nzSize="large">
+        <input nz-input formControlName="jobCode" placeholder="工号" />
+      </nz-input-group>
+      <ng-template #jobCodeErrorTip let-i>
+        <ng-container *ngIf="i.errors?.required">请输入工号！</ng-container>
+        <ng-container *ngIf="i.errors?.exist">该工号已存在！</ng-container>
+      </ng-template>
+    </nz-form-control>
+  </nz-form-item>
+  <!--姓名-->
+  <nz-form-item>
+    <nz-form-label [nzSpan]="7" nzRequired>姓名</nz-form-label>
+    <nz-form-control [nzErrorTip]="nameErrorTip">
+      <nz-input-group nzSize="large">
+        <input nz-input formControlName="name" placeholder="姓名" />
+      </nz-input-group>
+      <ng-template #nameErrorTip let-i>
+        <ng-container *ngIf="i.errors?.required">请输入姓名！</ng-container>
+        <ng-container *ngIf="i.errors?.maxLength">姓名限制在10个字符以内！</ng-container>
+      </ng-template>
+    </nz-form-control>
+  </nz-form-item>
+  <!--手机号-->
+  <nz-form-item>
+    <nz-form-label [nzSpan]="7" nzRequired>手机号</nz-form-label>
+    <nz-form-control [nzErrorTip]="phoneErrorTip">
+      <nz-input-group nzSize="large">
+        <input formControlName="phone" nz-input placeholder="手机号" />
+      </nz-input-group>
+      <ng-template #phoneErrorTip let-i>
+        <ng-container *ngIf="i.errors?.required">请输入手机号！</ng-container>
+        <ng-container *ngIf="i.errors?.pattern">手机号格式错误！</ng-container>
+        <ng-container *ngIf="i.errors?.exist">该手机号已存在！</ng-container>
+        <ng-container *ngIf="i.errors?.duplicated">{{msg}}</ng-container>
+      </ng-template>
+    </nz-form-control>
+  </nz-form-item>
+  <!--密码-->
+  <nz-form-item>
+    <nz-form-label [nzSpan]="7" nzRequired>密码</nz-form-label>
+    <nz-form-control [nzErrorTip]="'请输入密码！'">
+      <nz-input-group
+        nzSize="large"
+        nz-popover
+        nzPopoverPlacement="right"
+        nzPopoverTrigger="focus"
+        [(nzVisible)]="visible"
+        nzOverlayClassName="register-password-cdk"
+        [nzOverlayStyle]="{ 'width.px': 240 }"
+        [nzPopoverContent]="pwdCdkTpl"
+      >
+        <input nz-input type="password" formControlName="password" placeholder="密码" />
+      </nz-input-group>
+      <ng-template #pwdCdkTpl>
+        <div style="padding: 4px 0;">
+          <ng-container [ngSwitch]="status">
+            <div *ngSwitchCase="'ok'" class="success">强度：强</div>
+            <div *ngSwitchCase="'pass'" class="warning">强度：中</div>
+            <div *ngSwitchDefault class="error">强度：太短</div>
+          </ng-container>
+          <div class="progress-{{ status }}">
+            <nz-progress
+              [nzPercent]="progress"
+              [nzStatus]="passwordProgressMap[status]"
+              [nzStrokeWidth]="6"
+              [nzShowInfo]="false"
+            ></nz-progress>
+          </div>
+          <p class="mt-sm">请至少输入 6 个字符。请不要使用容易被猜到的密码。</p>
+        </div>
+      </ng-template>
+    </nz-form-control>
+  </nz-form-item>
+  <!--确认密码-->
+  <nz-form-item>
+    <nz-form-label [nzSpan]="7" nzRequired>确认密码</nz-form-label>
+    <nz-form-control [nzErrorTip]="confirmErrorTip">
+      <nz-input-group nzSize="large">
+        <input nz-input type="password" formControlName="confirm" placeholder="确认密码" />
+      </nz-input-group>
+      <ng-template #confirmErrorTip let-i>
+        <ng-container *ngIf="i.errors?.required">请确认密码！</ng-container>
+        <ng-container *ngIf="i.errors?.equar">两次输入的密码不匹配!</ng-container>
+      </ng-template>
+    </nz-form-control>
+  </nz-form-item>
+  <!--按钮-->
+  <nz-form-item>
+    <button nz-button nzType="primary" nzSize="large" type="submit" [nzLoading]="http.loading" class="submit">
+      注册
+    </button>
+    <a class="login" routerLink="/passport/login">使用已有账户登录</a>
+  </nz-form-item>
+</form>

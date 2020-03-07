@@ -1,0 +1,370 @@
+<div style="padding-top: 50px; padding-left: 70px;">
+  <span style="font-size:30px; text-align:center">薪资汇总</span>
+</div>
+
+<nz-row nzType="flex" nzJustify="end">
+  <!--日期搜索框-->
+  <nz-col [nzSpan]="3" style="margin-right: 10px"><!--[nzPull]="2" style="margin-right: 15px"-->
+    <nz-month-picker
+      [(ngModel)]="monthSelect"
+      (ngModelChange)="timeChange($event)"
+      nzPlaceHolder="请选择月份"
+    ></nz-month-picker>
+  </nz-col>
+  <!--搜索栏-->
+  <nz-col [nzSpan]="7" ><!--style="margin-right: 15px"-->
+    <nz-input-group nzSearch [nzAddOnAfter]="suffixIconButton">
+      <input type="text" nz-input placeholder="请输入姓名或工号" [(ngModel)]="searchStr"/>
+    </nz-input-group>
+    <ng-template #suffixIconButton>
+      <button nz-button nzType="primary" nzSearch (click)="inputSearch()">
+        <i nz-icon nzType="search" ></i>
+      </button>
+    </ng-template>
+  </nz-col>
+  <!--添加按钮-->
+  <nz-col [nzPull]="2">
+    <button nz-button nzType="primary" (click)="showSalaryModal(null)">添加薪资单</button>
+  </nz-col>
+
+</nz-row>
+<br />
+
+<div nz-row nzGutter="{ xs: 8, sm: 16, md: 24, lg: 32, xl: 32 }">
+  <nz-col [nzSpan]="20" [nzOffset]="2"><!--[nzVirtualForTrackBy]="trackByIndex"-->
+    <nz-table
+        #ajaxTable
+        nzVirtualScroll
+        [nzVirtualItemSize]="8"
+        [nzData]="salaryData"
+        [nzFrontPagination]="true"
+        [nzShowPagination]="true"
+        [nzScroll]="{ x: '1200px', y: '300px' }"
+        [nzTotal]="_total"
+        [(nzPageIndex)]="_current"
+        [(nzPageSize)]="_pageSize"
+        [nzLoading]="loading"
+        [nzPageSizeOptions]="[ 10, 20, 30, 40, 50 ]"
+        [nzShowSizeChanger]="true"
+        [nzShowTotal]="template"
+        [nzShowQuickJumper]="true"
+        (nzPageIndexChange)="pageChange()"
+        (nzPageSizeChange)="pageChange(true)"
+    >
+      <ng-template #template let-total>共有{{_total}}条数据</ng-template>
+      <thead>
+      <tr>
+        <th nzWidth="80px" nzLeft="0px">序号</th>
+        <th nzWidth="100px" nzLeft="80px">姓名</th>
+        <th nzWidth="120px" nzLeft="180px">工号</th>
+        <th nzWidth="100px">基本工资</th>
+        <th nzWidth="100px">津补贴</th>
+        <th nzWidth="100px">社保</th>
+        <th nzWidth="100px">公积金</th>
+        <th nzWidth="100px">其他附加</th>
+        <th nzWidth="100px">其他扣除</th>
+        <th nzWidth="100px">总工资</th>
+        <th nzWidth="100px">年月</th>
+        <th nzWidth="100px" nzRight="0px">操作</th>
+      </tr>
+      </thead>
+      <tbody>
+      <ng-template nz-virtual-scroll let-data let-i="index">
+        <tr>
+          <td nzWidth="80px" nzLeft="0px">{{ i + 1 }}</td>
+          <td nzWidth="100px" nzLeft="80px">{{ data.name }}</td>
+          <td nzWidth="120px" nzLeft="180px">{{ data.jobCode }}</td>
+          <td nzWidth="100px">{{ data.basicSalary }}</td>
+          <td nzWidth="100px">{{ data.subsidy }}</td>
+          <td nzWidth="100px">{{ data.socialInsurance }}</td>
+          <td nzWidth="100px">{{ data.accumulationFund }}</td>
+          <td nzWidth="100px">{{ data.otherAdd }}</td>
+          <td nzWidth="100px">{{ data.otherMinus }}</td>
+          <td nzWidth="100px">{{ data.totalWage }}</td>
+          <td nzWidth="100px">{{ data.yearMonth }}</td>
+          <td nzWidth="100px" nzRight="0px">
+            <!--编辑按钮-->
+            <button nz-button nzType="primary" nzSize="small" (click)="showSalaryModal(data)" style="margin-right: 5px">
+              <i nz-icon nzType="edit" nzTheme="outline"></i>
+            </button>
+            <!--删除（离职）按钮-->
+            <button nz-button nzType="danger" nz-popconfirm nzSize="small" (nzOnConfirm)="delete(data)" [nzTitle]=" '删除'" nz-tooltip>
+              <i nz-icon nzType="delete" nzTheme="outline" ></i>
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+      </tbody>
+    </nz-table>
+  </nz-col>
+</div>
+
+<!--添加/编辑薪资对话框-->
+<nz-modal
+  [(nzVisible)]="isVisible"
+  [nzMaskClosable]="false"
+  [nzTitle]="formTitle"
+  [nzContent]="modalContent"
+  [nzFooter]="modalFooter"
+  (nzOnCancel)="handleCancel()">
+  <ng-template #modalContent>
+    <form nz-form [formGroup]="form">
+      <!--<nz-row>
+        <nz-col [nzSpan]="10" [nzOffset]="2">
+          <ng-container *ngIf="form.get('jobCode')">
+            {{form.get('jobCode').value}}
+          </ng-container>
+        </nz-col>
+      </nz-row>-->
+      <nz-row>
+        <!--员工姓名-->
+        <nz-col [nzSpan]="10" [nzOffset]="2">
+          <nz-form-item>
+            <nz-form-label [nzSpan]="8" nzRequired>姓名</nz-form-label>
+            <nz-form-control [nzErrorTip]="peopleErrorTpl">
+              <nz-select nzShowSearch nzAllowClear formControlName="jobCode" style="width:100px;">
+                <nz-option *ngFor="let people of peopleInfo" [nzValue]="people.jobCode" [nzLabel]="people.name"></nz-option>
+              </nz-select>
+              <ng-template #peopleErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">
+                  请选择员工姓名！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('repeat')">
+                  该员工已存在相同时刻的薪资信息！
+                </ng-container>
+              </ng-template>
+            </nz-form-control>
+          </nz-form-item>
+        </nz-col>
+
+        <nz-col [nzSpan]="12">
+          <!--年月-->
+          <nz-form-item>
+            <nz-form-label [nzSpan]="6" nzRequired>年月</nz-form-label>
+            <nz-form-control [nzErrorTip]="yearMonthErrorTpl">
+              <nz-month-picker
+                formControlName="yearMonth"
+                style="width: 100px;"
+                placeholder="年月"
+              ></nz-month-picker>
+              <ng-template #yearMonthErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">
+                  请选择年月！
+                </ng-container>
+              </ng-template>
+            </nz-form-control>
+          </nz-form-item>
+        </nz-col>
+      </nz-row>
+
+      <nz-row>
+        <!--基本工资-->
+        <nz-col [nzSpan]="10" [nzOffset]="1">
+          <nz-form-item>
+            <nz-form-label [nzSpan]="10" nzRequired>基本工资</nz-form-label>
+            <nz-form-control [nzErrorTip]="basicSalaryErrorTpl">
+              <nz-input-number formControlName="basicSalary"
+                               [nzMin]="0"
+                               [nzMax]="9999999"
+                               [nzStep]="1"
+                               [nzSize]="'default'"
+                               style="width:100px;"
+                               (ngModelChange)="valueChange($event)"></nz-input-number>
+              <ng-template #basicSalaryErrorTpl let-control>
+
+                <ng-container *ngIf="control.hasError('maxLength')">
+                  基本工资超过最大值！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('validateNull')">
+                  请输入基本工资！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('decimalError')">
+                  最多输入两位小数哦！
+                </ng-container>
+              </ng-template>
+            </nz-form-control>
+          </nz-form-item>
+        </nz-col>
+
+        <!--津补贴-->
+        <nz-col [nzSpan]="12">
+          <nz-form-item>
+            <nz-form-label [nzSpan]="8" nzRequired>津补贴</nz-form-label>
+            <nz-form-control [nzErrorTip]="subsidyErrorTpl">
+              <nz-input-number formControlName="subsidy"
+                               [nzMin]="0"
+                               [nzMax]="9999999"
+                               [nzStep]="1"
+                               [nzSize]="'default'"
+                               style="width: 100px;"
+                               (ngModelChange)="valueChange($event)"></nz-input-number>
+              <ng-template #subsidyErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">
+                  请输入津补贴！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('maxLength')">
+                  津补贴超过最大值！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('validateNull')">
+                  请输入津补贴！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('decimalError')">
+                  最多输入两位小数哦！
+                </ng-container>
+              </ng-template>
+            </nz-form-control>
+          </nz-form-item>
+        </nz-col>
+      </nz-row>
+
+      <nz-row>
+        <!--社保-->
+        <nz-col [nzSpan]="9" [nzOffset]="2">
+          <nz-form-item>
+            <nz-form-label [nzSpan]="8" nzRequired>社保</nz-form-label>
+            <nz-form-control [nzErrorTip]="socialInsuranceErrorTpl">
+              <nz-input-number formControlName="socialInsurance"
+                               [nzMin]="0"
+                               [nzMax]="9999999"
+                               [nzStep]="1"
+                               [nzSize]="'default'"
+                               style="width:100px;"
+                               (ngModelChange)="valueChange($event)"></nz-input-number>
+              <ng-template #socialInsuranceErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">
+                  请输入社保！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('maxLength')">
+                  社保超过最大值！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('validateNull')">
+                  请输入社保！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('decimalError')">
+                  最多输入两位小数哦！
+                </ng-container>
+              </ng-template>
+            </nz-form-control>
+          </nz-form-item>
+        </nz-col>
+
+        <nz-col [nzSpan]="12">
+          <!--公积金-->
+          <nz-form-item>
+            <nz-form-label [nzSpan]="8" nzRequired>公积金</nz-form-label>
+            <nz-form-control [nzErrorTip]="accumulationFundErrorTpl">
+              <nz-input-number formControlName="accumulationFund"
+                               [nzMin]="0"
+                               [nzMax]="9999999"
+                               [nzStep]="1"
+                               [nzSize]="'default'"
+                               style="width: 100px;"
+                               (ngModelChange)="valueChange($event)"></nz-input-number>
+              <ng-template #accumulationFundErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">
+                  请输入公积金！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('maxLength')">
+                  公积金超过最大值！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('validateNull')">
+                  请输入公积金！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('decimalError')">
+                  最多输入两位小数哦！
+                </ng-container>
+              </ng-template>
+            </nz-form-control>
+          </nz-form-item>
+        </nz-col>
+      </nz-row>
+
+      <nz-row>
+        <!--其他附加-->
+        <nz-col [nzSpan]="10" [nzOffset]="1">
+          <nz-form-item>
+            <nz-form-label [nzSpan]="10" nzRequired>其他附加</nz-form-label>
+            <nz-form-control [nzErrorTip]="otherAddErrorTpl">
+              <nz-input-number formControlName="otherAdd"
+                               [nzMin]="0"
+                               [nzMax]="9999999"
+                               [nzStep]="1"
+                               [nzSize]="'default'"
+                               style="width:100px;"
+                               (ngModelChange)="valueChange($event)"></nz-input-number>
+              <ng-template #otherAddErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">
+                  请输入其他附加！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('maxLength')">
+                  其他附加超过最大值！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('validateNull')">
+                  请输入其他附加！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('decimalError')">
+                  最多输入两位小数哦！
+                </ng-container>
+              </ng-template>
+            </nz-form-control>
+          </nz-form-item>
+        </nz-col>
+
+        <nz-col [nzSpan]="12">
+          <!--其他扣除-->
+          <nz-form-item>
+            <nz-form-label [nzSpan]="8" nzRequired>其他扣除</nz-form-label>
+            <nz-form-control [nzErrorTip]="otherMinusErrorTpl">
+              <nz-input-number formControlName="otherMinus"
+                               [nzMin]="0"
+                               [nzMax]="9999999"
+                               [nzStep]="1"
+                               [nzSize]="'default'"
+                               style="width: 100px;"
+                               (ngModelChange)="valueChange($event)"></nz-input-number>
+              <ng-template #otherMinusErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">
+                  请输入其他扣除！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('maxLength')">
+                  其他扣除超过最大值！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('validateNull')">
+                  请输入其他扣除！
+                </ng-container>
+                <ng-container *ngIf="control.hasError('decimalError')">
+                  最多输入两位小数哦！
+                </ng-container>
+              </ng-template>
+            </nz-form-control>
+          </nz-form-item>
+        </nz-col>
+      </nz-row>
+
+      <!--总工资-->
+      <nz-row>
+        <nz-col [nzSpan]="10" [nzOffset]="2">
+          <nz-form-item>
+            <nz-form-label>总工资</nz-form-label>
+            <label>
+              {{form.controls['totalWage'].value}}
+            </label>
+          </nz-form-item>
+        </nz-col>
+
+        <!--<nz-col [nzSpan]="12">
+          <nz-form-item>
+            <nz-form-label [nzSpan]="7">备注</nz-form-label>
+            <nz-form-control [nzSpan]="12">
+              <textarea formControlName="remark" nz-input rows="2"></textarea>
+            </nz-form-control>
+          </nz-form-item>
+        </nz-col>-->
+      </nz-row>
+    </form>
+  </ng-template>
+  <ng-template #modalFooter>
+    <button nz-button nzType="default" (click)="handleCancel()">取消</button>
+    <button nz-button nzType="primary" (click)="handleOk()" [nzLoading]="boxLoading">确定</button>
+  </ng-template>
+</nz-modal>

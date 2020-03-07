@@ -1,0 +1,117 @@
+<div style="padding-top: 50px; padding-left: 70px;">
+  <span style="font-size:30px; text-align:center">花名册</span>
+</div>
+
+<nz-row nzType="flex" nzJustify="end">
+
+  <!--搜索栏-->
+  <nz-col [nzSpan]="8" style="margin-right: 5px" [nzPull]="4">
+    <nz-input-group nzSearch [nzAddOnAfter]="searchButton">
+      <input type="text" nz-input [(ngModel)]="simpleSearchStr" placeholder="请输入姓名或工号" style="width: 400px"/>
+    </nz-input-group>
+    <ng-template #searchButton>
+      <button nz-button nzType="primary" nzSearch (click)="simpleSearch()">
+        <i nz-icon nzType="search"></i>
+      </button>
+    </ng-template>
+  </nz-col>
+  <!--更多操作-->
+  <nz-col [nzPull]="2">
+    <button nz-button nz-dropdown nzTrigger="click" [nzDropdownMenu]="menu">
+      更多操作
+      <i nz-icon nzType="down"></i>
+    </button>
+    <nz-dropdown-menu #menu="nzDropdownMenu">
+      <ul nz-menu>
+        <li nz-menu-item (click)="addPerson()">添加人员</li>
+<!--        <li nz-menu-item (click)="departmentManage()">部门管理</li>
+        <li nz-menu-item (click)="salaryManage()">薪资管理</li>
+
+        <li nz-menu-item (click)="personalInfoManage()">个人中心</li>
+        <li nz-menu-item (click)="personalSalary()">个人工资单</li>-->
+      </ul>
+    </nz-dropdown-menu>
+  </nz-col>
+
+</nz-row>
+<br />
+
+<!--表格-->
+<div nz-row nzGutter="{ xs: 8, sm: 16, md: 24, lg: 32, xl: 32 }">
+  <nz-col [nzSpan]="20" [nzOffset]="2">
+    <nz-table
+        #ajaxTable
+        nzVirtualScroll
+        nzBordered
+        [nzVirtualItemSize]="8"
+        [nzShowPagination]="true"
+        [nzPageSizeOptions]="[ 10, 20, 30, 40, 50 ]"
+        [nzShowSizeChanger]="true"
+        [nzShowTotal]="template"
+        [nzShowQuickJumper]="true"
+        [nzScroll]="{ x: '1600px', y: '300px' }"
+        [nzData]="userList"
+        nzShowSizeChanger
+        [nzFrontPagination]="false"
+        [nzLoading]="loading"
+        [nzTotal]="total"
+        [(nzPageIndex)]="pageIndex"
+        [(nzPageSize)]="pageSize"
+        (nzPageIndexChange)="searchData()"
+        (nzPageSizeChange)="searchData(true)"
+    >
+      <ng-template #template let-total>共有{{total}}条数据</ng-template>
+      <thead>
+      <tr>
+        <th nzWidth="80px" nzLeft="0px">序号</th>
+        <th nzWidth="100px" nzLeft="80px">姓名</th>
+        <th nzWidth="120px" nzLeft="180px">工号</th>
+        <th nzWidth="80px">性别
+        </th>
+        <th nzWidth="100px">年龄</th>
+        <th nzWidth="120px">手机号</th>
+        <th nzWidth="200px">身份证号</th>
+        <th nzWidth="100px">部门</th>
+        <th nzWidth="100px">岗位</th>
+        <th nzWidth="100px">政治面貌</th>
+        <th nzWidth="100px">民族</th>
+        <th nzWidth="100px">婚姻状况</th>
+        <th nzWidth="200px">现居住地</th>
+        <th nzWidth="100px" nzRight="0px">操作</th>
+      </tr>
+      </thead>
+      <tbody>
+      <ng-template nz-virtual-scroll let-data let-i="index">
+        <tr>
+        <td nzWidth="80px" nzLeft="0px">{{ i + 1 }}</td>
+        <td nzWidth="100px" nzLeft="80px">{{ data.name }}</td>
+        <td nzWidth="120px" nzLeft="180px">{{ data.jobCode }}</td>
+        <td nzWidth="80px">
+          <ng-container *ngIf="data.sex == 1">女</ng-container>
+          <ng-container *ngIf="data.sex == 0">男</ng-container>
+        </td>
+        <td nzWidth="100px">{{ data.age }}</td>
+        <td nzWidth="120px">{{ data.phone }}</td>
+        <td nzWidth="200px">{{ data.idnumber }}</td>
+        <td nzWidth="100px">{{ data.departName }}</td>
+        <td nzWidth="100px">{{ data.postName }}</td>
+        <td nzWidth="100px">{{ data.political }}</td>
+        <td nzWidth="100px">{{ data.nation }}</td>
+        <td nzWidth="100px">{{ data.marriageStatus }}</td>
+        <td nzWidth="200px">{{ data.address }}</td>
+        <td nzWidth="100px" nzRight="0px">
+          <!--编辑按钮-->
+          <button nz-button nzType="primary" nzSize="small" (click)="editInfo(data)" >
+            <i nz-icon nzType="edit" nzTheme="outline"></i>
+          </button>
+          <!--删除（离职）按钮-->
+          <button nz-button nzType="danger" nz-popconfirm nzSize="small" (nzOnConfirm)="deleteUser(data)" [nzTitle]=" '删除'" nz-tooltip>
+            <i nz-icon nzType="delete" nzTheme="outline" ></i>
+          </button>
+        </td>
+        </tr>
+      </ng-template>
+      </tbody>
+    </nz-table>
+  </nz-col>
+</div>

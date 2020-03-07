@@ -1,0 +1,240 @@
+<div style="padding-top: 50px; padding-left: 70px;">
+  <span style="font-size: 30px;">部门岗位管理</span>
+</div>
+<nz-row nzType="flex" nzJustify="end">
+  <!--检索框-->
+  <nz-col [nzSpan]="8" style="margin-right: 5px" [nzPull]="3">
+    <nz-input-group nzSearch [nzAddOnAfter]="suffixIconButton">
+      <input type="text" nz-input placeholder="请输入岗位名" [(ngModel)]="postSearchStr" style="width: 330px"/>
+    </nz-input-group>
+    <ng-template #suffixIconButton>
+      <button nz-button nzType="primary" nzSearch (click)="searchPost()"><i nz-icon nzType="search"></i></button>
+    </ng-template>
+  </nz-col>
+  <!--添加按钮-->
+  <nz-col [nzPull]="3" style="margin-right: 15px">
+    <div class="btn-left">
+      <button (click)="showPostModal(null)" [nzType]="'primary'" nz-button>
+        <i class="hrms-button" nz-icon nzTheme="outline" nzType="plus"></i>
+        <span>添加岗位</span>
+      </button>
+    </div>
+  </nz-col>
+</nz-row>
+
+<div style="padding-top: 20px; padding-left: 60px;">
+  <nz-layout style="height: 380px; width: 900px;">
+    <nz-sider [nzWidth]="400" class="sider">
+      <div style="overflow: auto; height: 380px; border: 0.5px solid #e4e7ec;">
+
+        <!--部门搜索框-->
+        <nz-input-group [nzSuffix]="suffixIcon" style="padding: 10px 10px">
+          <input type="text" nz-input placeholder="请输入要查询的部门名称" [(ngModel)]="searchValue" />
+        </nz-input-group>
+
+        <ng-template #suffixIcon>
+          <i nz-icon nzType="search" style="padding: 10px 10px"></i>
+        </ng-template>
+
+        <!--部门树结构-->
+        <nz-tree
+          [nzData]="nodes"
+          [nzExpandAll]="true"
+          [nzSearchValue]="searchValue"
+          [nzHideUnMatched]="true"
+          nzShowIcon [nzTreeTemplate]="expandedIconTpl"
+        >
+          <!--树中的每个节点-->
+          <ng-template #expandedIconTpl let-node>
+              <span [class.ant-tree-node-selected]="node.isSelected" aria-grabbed="true"
+                    class="ant-tree-node-content-wrapper ng-star-inserted father">
+                <span style="display: flex">
+                  <span (click)="showPost(node)" style="display: flex">
+                    <div class="float-left mr-sm">
+                        <i nz-icon nzTheme="outline" nzType="home"></i>
+                    </div>
+                    <div SelectTextChange class="float-left mr-sm">
+                       {{node.title}}
+                    </div>
+                  </span>
+                  <div [class.visibleClassHidden]="!node.isSelected" [class.visibleClassShow]="node.isSelected">
+                    <!--添加时使用当前节点的path-->
+                    <i (click)="showDepartModal(node, null)"
+                       [nzTitle]="'添加子部门'"
+                       class="ml-sm icon-size float-left mr-sm" nz-icon nzType="plus" nzTheme="outline"
+                       nz-tooltip ></i>
+                  </div>
+                  <div [class.visibleClassHidden]="!node.isSelected" [class.visibleClassShow]="node.isSelected">
+                    <!--添加时使用当前节点的path-->
+                    <i (click)="showDepartModal(node, true)"
+                       [nzTitle]="'编辑部门'"
+                       class="ml-sm icon-size float-left mr-sm" nz-icon nzType="edit" nzTheme="outline"
+                       nz-tooltip></i>
+                  </div>
+                  <div [class.visibleClassHidden]="!node.isSelected" [class.visibleClassShow]="node.isSelected">
+                    <!--添加时使用当前节点的path-->
+                    <i (click)="deleteDepartment(node)"
+                       [nzTitle]="'删除部门'"
+                       class="ml-sm icon-size" nz-icon nzType="delete" nzTheme="outline"
+                       nz-tooltip></i>
+                  </div>
+                </span>
+              </span>
+          </ng-template>
+        </nz-tree>
+      </div>
+    </nz-sider>
+
+    <nz-sider [nzWidth]="500" class="post_slider">
+
+      <!--该部门下没有岗位的情况-->
+      <ng-container *ngIf="postList == null">
+        <div class="post_empty">
+          <nz-empty></nz-empty>
+        </div>
+      </ng-container>
+
+      <!--该部门下存在岗位的情况-->
+      <ng-container *ngIf="postList != null">
+        <!--虚拟滚轮-->
+        <cdk-virtual-scroll-viewport itemSize="73" class="demo-infinite-container">
+          <!--岗位列表-->
+          <nz-list
+            [nzDataSource]="postList"
+            nzBordered
+            nzSize="large"
+            [nzHeader]="postListHead"
+            [nzRenderItem]="largeItem">
+            <ng-template #largeItem let-item>
+              <nz-list-item [nzActions]="[editAction, deleteAction]" nzNoFlex style="height: 100px;">
+                <ng-template #editAction><a (click)="showPostModal(item)">编辑</a></ng-template>
+                <ng-template #deleteAction><a (click)="deletePost(item)">删除</a></ng-template>
+                <nz-list-item-meta
+                  *ngIf="item"
+                  [nzTitle]="item.name"
+                  [nzDescription]="item.remark"
+                >
+                </nz-list-item-meta>
+              </nz-list-item>
+            </ng-template>
+          </nz-list>
+        </cdk-virtual-scroll-viewport>
+      </ng-container>
+
+    </nz-sider>
+  </nz-layout>
+</div>
+
+<!--添加/编辑岗位对话框-->
+<nz-modal
+  [(nzVisible)]="isVisiblePost"
+  [nzMaskClosable]="false"
+  [nzTitle]="postFormTitle"
+  [nzContent]="modalContentPost"
+  [nzFooter]="modalFooterPost"
+  (nzOnCancel)="postHandleCancel()">
+  <ng-template #modalContentPost>
+    <form nz-form [formGroup]="postForm">
+
+      <nz-form-item>
+        <nz-form-label [nzSpan]="7" nzRequired>父部门</nz-form-label>
+        <nz-form-control [nzSpan]="12" nzErrorTip="请选择父部门！">
+          <nz-tree-select
+            nzAllowClear
+            formControlName="parentDepart"
+            style="width: 250px"
+            [nzDefaultExpandAll]="true"
+            [nzNodes]="nodes"
+            nzShowSearch
+          >
+          </nz-tree-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label [nzSpan]="7" nzRequired>岗位名称</nz-form-label>
+        <nz-form-control [nzSpan]="12" nzHasFeedback [nzErrorTip]="postErrorTpl">
+          <input nz-input formControlName="postName"/>
+          <ng-template #postErrorTpl let-control>
+            <ng-container *ngIf="postForm.get('postName').dirty && control.hasError('required')">
+              请输入岗位名称！
+            </ng-container>
+            <ng-container *ngIf="postForm.get('postName').dirty && control.hasError('duplicated')">
+              该岗位名称已存在！
+            </ng-container>
+          </ng-template>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label [nzSpan]="7">备注</nz-form-label>
+        <nz-form-control [nzSpan]="12">
+          <textarea formControlName="remark" nz-input rows="2"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-template>
+  <ng-template #modalFooterPost>
+    <button nz-button nzType="default" (click)="postHandleCancel()">取消</button>
+    <button nz-button nzType="primary" (click)="postHandleOk()" [nzLoading]="isPostLoading">确定</button>
+  </ng-template>
+</nz-modal>
+
+<!--添加/编辑部门对话框-->
+<nz-modal
+  [(nzVisible)]="isVisibleDepart"
+  [nzMaskClosable]="false"
+  [nzTitle]="departFormTitle"
+  [nzContent]="modalContentDepart"
+  [nzFooter]="modalFooterDepart"
+  (nzOnCancel)="departHandleCancel()">
+  <ng-template #modalContentDepart>
+    <form nz-form [formGroup]="departForm">
+      <nz-form-item>
+        <nz-form-label [nzSpan]="7" nzRequired>父部门</nz-form-label>
+          <nz-form-control [nzSpan]="12">
+            <ng-container *ngIf="!isRoot">
+              <nz-tree-select
+                nzAllowClear
+                formControlName="parentDepart"
+                style="width: 250px"
+                [nzDefaultExpandAll]="true"
+                [nzNodes]="nodes"
+                nzShowSearch
+              >
+              </nz-tree-select>
+              <ng-container *ngIf="isRoot">
+                <label>根目录</label>
+              </ng-container>
+          </ng-container>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label [nzSpan]="7" nzRequired>部门名称</nz-form-label>
+        <nz-form-control [nzSpan]="12" nzHasFeedback [nzErrorTip]="departErrorTpl">
+          <input nz-input formControlName="departName"/>
+          <ng-template #departErrorTpl let-control>
+            <ng-container *ngIf="departForm.get('departName').dirty && control.hasError('required')">
+              请输入部门名称！
+            </ng-container>
+            <ng-container *ngIf="departForm.get('departName').dirty && control.hasError('duplicated')">
+              该部门名称已存在！
+            </ng-container>
+          </ng-template>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label [nzSpan]="7">备注</nz-form-label>
+        <nz-form-control [nzSpan]="12">
+          <textarea formControlName="remark" nz-input rows="2"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-template>
+  <ng-template #modalFooterDepart>
+    <button nz-button nzType="default" (click)="departHandleCancel()">取消</button>
+    <button nz-button nzType="primary" (click)="departHandleOk()" [nzLoading]="isDepartLoading">确定</button>
+  </ng-template>
+</nz-modal>

@@ -1,0 +1,21 @@
+<div class="alain-default__aside-inner">
+  <div class="alain-default__aside-user" routerLink="/personal-info">
+    <nz-avatar class="alain-default__aside-user-avatar" [nzSrc]="settings.user.avatar"></nz-avatar>
+    <div class="alain-default__aside-user-info">
+      <strong>{{ userInfo?.name }}</strong>
+      <p class="mb0">{{ userInfo?.jobCode }}</p>
+    </div>
+  </div>
+
+  <ul nz-menu nzMode="inline" [nzInlineIndent]="32">
+    <li nz-submenu nzTitle="   目录" nzIcon="setting" nzOpen>
+      <ul>
+        <li nz-menu-item routerLink="/roster">花名册</li>
+        <li nz-menu-item routerLink="/department-post-manage">组织架构</li>
+        <li nz-menu-item routerLink="/salary">薪资管理</li>
+        <li nz-menu-item routerLink="/personal-info">个人设置</li>
+        <li nz-menu-item routerLink="/personal-salary">个人工资单</li>
+      </ul>
+    </li>
+  </ul>
+</div>

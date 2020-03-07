@@ -1,0 +1,65 @@
+<br />
+<div style="font-size:30px; text-align:center">工资单</div>
+<br />
+<!--表格-->
+<nz-row>
+  <nz-col [nzOffset]="5" [nzSpan]="15">
+    <nz-table
+        #basicTable
+        nzBordered ><!--
+        [nzData]="salaryData"
+        [nzLoading]="tableLoading"
+        [nzShowPagination]="false"
+        nzBordered
+        [nzFrontPagination]="false"-->
+      <thead>
+      <tr>
+        <th nzWidth="100px" class="td-color font-weight-bold">项目</th>
+        <th nzWidth="250px" class="td-color text-center">
+          <nz-month-picker
+            [(ngModel)]="yearMonth"
+            (ngModelChange)="onChange($event)"
+            nzPlaceHolder="请选择时间">
+          </nz-month-picker>
+        </th>
+
+      </tr>
+      </thead>
+      <tbody>
+      <ng-container *ngIf="!isEmpty">
+        <tr>
+          <td nzWidth="100px">基本工资</td>
+          <td nzWidth="250px">{{ salaryData?.basicSalary }}元</td>
+        </tr>
+        <tr>
+          <td nzWidth="100px">基本工资</td>
+          <td nzWidth="250px">{{ salaryData?.subsidy }}元</td>
+        </tr>
+        <tr>
+          <td nzWidth="100px">社保</td>
+          <td nzWidth="250px">{{ salaryData?.socialInsurance }}元</td>
+        </tr>
+        <tr>
+          <td nzWidth="100px">公积金</td>
+          <td nzWidth="250px">{{ salaryData?.accumulationFund }}元</td>
+        </tr>
+        <tr>
+          <td nzWidth="100px">其他附加</td>
+          <td nzWidth="250px">{{ salaryData?.otherAdd }}元</td>
+        </tr>
+        <tr>
+          <td nzWidth="100px">其他扣除</td>
+          <td nzWidth="250px">{{ salaryData?.otherMinus }}元</td>
+        </tr>
+        <tr>
+          <td nzWidth="100px">总工资</td>
+          <td nzWidth="250px">{{ salaryData?.totalWage }}元</td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="isEmpty">
+
+      </ng-container>
+      </tbody>
+    </nz-table>
+  </nz-col>
+</nz-row>
